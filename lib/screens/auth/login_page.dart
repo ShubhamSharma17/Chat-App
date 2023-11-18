@@ -1,6 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:developer';
+
+import 'package:chat_app/models/user_model.dart';
 import 'package:chat_app/screens/auth/signup_page.dart';
+import 'package:chat_app/screens/home_page.dart';
 import 'package:chat_app/utility/colors.dart';
 import 'package:chat_app/utility/utility.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -16,6 +24,30 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormBuilderState> _key = GlobalKey<FormBuilderState>();
+  
+  // login method..
+  void logIn(String email, String password)async{
+    UserCredential? credential;
+    try{
+      credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email, password: password
+        );
+    } on FirebaseException catch(error){
+      log(error.message.toString());
+    }
+    if(credential != null){
+      String uid = credential.user!.uid;
+
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection("user").doc(uid).get();
+      UserModel userData = UserModel.fromMap(snapshot.data() as Map<String,dynamic>);
+
+      // now you can to to other screen
+      log("Login SuccessFully:)");
+      Navigator.push(context, CupertinoPageRoute(builder: (context) {
+        return HomePage(firebaseUser: credential!.user!,userModel: userData,);
+      },));
+    }
+  }
   bool isDisable = true;
   bool show = false;
   TextEditingController emailController = TextEditingController();
@@ -52,11 +84,9 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.emailAddress,
                       textCapitalization: TextCapitalization.words,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: FormBuilderValidators.required(
-                        errorText: "email can't be empty",
-                      ),
+                      validator: FormBuilderValidators.email(errorText: "Please Enter Valid Email Address"),
                       onChanged: (value) {
-                        if (_key.currentState!.validate()) {
+                        if (_key.currentState!.validate() && passwordController.text != "") {
                           setState(() {
                             isDisable = false;
                           });
@@ -110,11 +140,11 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.text,
                       textCapitalization: TextCapitalization.words,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: FormBuilderValidators.required(
-                        errorText: "Password can't be empty",
-                      ),
+                      // validator: FormBuilderValidators.required(
+                      //   errorText: "Password can't be empty",
+                      // ),
                       onChanged: (value) {
-                        if (_key.currentState!.validate()) {
+                        if (_key.currentState!.validate() && passwordController.text != "") {
                           setState(() {
                             isDisable = false;
                           });
@@ -177,6 +207,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               verticalSpacesLarge,
+             isDisable? CupertinoButton(
+                color: gray939393,
+                child: const Text(
+                  "Log In",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onPressed: () {},
+              ):
               CupertinoButton(
                 color: blue,
                 child: const Text(
@@ -185,7 +225,9 @@ class _LoginPageState extends State<LoginPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () { logIn(
+                  emailController.text.trim(), passwordController.text.trim()
+                );},
               )
             ],
           ),

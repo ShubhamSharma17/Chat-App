@@ -1,3 +1,9 @@
+import 'dart:developer';
+
+import 'package:chat_app/models/user_model.dart';
+import 'package:chat_app/screens/auth/complete_profile_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -7,7 +13,10 @@ import '../../utility/colors.dart';
 import '../../utility/utility.dart';
 
 class SignUpPage extends StatefulWidget {
+  
+
   const SignUpPage({super.key});
+  
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -21,6 +30,35 @@ class _SignUpPageState extends State<SignUpPage> {
   bool isDisable = true;
   bool show = false;
   bool show1 = false;
+
+  // method for sign up..
+  void signUp(String email, String password)async{
+    UserCredential? credential;
+    try{
+      credential =await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+    } on FirebaseException catch(error){
+      log(error.code.toString());
+    }
+    if(credential != null){
+      String uid = credential.user!.uid;
+      UserModel userModel = UserModel(
+        email: email,
+        uid: uid,
+        fullname: "",
+        phoneNumber: "",
+        profilepic: "",
+      );
+      await FirebaseFirestore.instance.collection("user").doc(uid).set(userModel.toMap()).then((value) {
+        emailController.clear();
+        passwordController.clear();
+        confirmPasswordController.clear();
+        log("User Has been created!");
+        Navigator.push(context, CupertinoPageRoute(builder: (context) {
+          return CompleteProfilePage(userModel: userModel, firebaseUser: credential!.user!);
+        },));
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -43,22 +81,23 @@ class _SignUpPageState extends State<SignUpPage> {
                   SizedBox(height: screenHeight(context) * .05),
                   // form builder..
                   FormBuilder(
+                    
                     key: _key,
                     child: Column(
                       children: [
                         // email text field
                         FormBuilderTextField(
                           name: "email address",
-                          obscureText: false,
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
                           textCapitalization: TextCapitalization.words,
                           autovalidateMode: AutovalidateMode.onUserInteraction,
-                          validator: FormBuilderValidators.required(
-                            errorText: "email can't be empty",
+                          validator: FormBuilderValidators.email(
+                            errorText: "Please Enter Valid Email Address",
                           ),
                           onChanged: (value) {
-                            if (_key.currentState!.validate()) {
+                            if (_key.currentState!.validate() && passwordController.text != ""
+                            && confirmPasswordController.text != "" ) {
                               setState(() {
                                 isDisable = false;
                               });
@@ -80,7 +119,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             fillColor: blueF4FDFFCC,
                             hintText: "Enter Email",
                             labelText: "Email",
-                            filled: true,
+                            // filled: true,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(100),
                               borderSide: const BorderSide(
@@ -114,15 +153,14 @@ class _SignUpPageState extends State<SignUpPage> {
                           autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: FormBuilderValidators.compose(
                             [
-                              FormBuilderValidators.required(
-                                  errorText: " Password can't be empty"),
                               FormBuilderValidators.match(
                                   confirmPasswordController.text,
                                   errorText: "Password must be same"),
                             ],
                           ),
                           onChanged: (value) {
-                            if (_key.currentState!.validate()) {
+                            if (_key.currentState!.validate() && passwordController.text != ""
+                            && confirmPasswordController.text != "" ) {
                               setState(() {
                                 isDisable = false;
                               });
@@ -187,21 +225,20 @@ class _SignUpPageState extends State<SignUpPage> {
                         FormBuilderTextField(
                           name: "Confirm Password",
                           controller: confirmPasswordController,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          // autovalidateMode: AutovalidateMode.onUserInteraction,
                           keyboardType: TextInputType.text,
                           textCapitalization: TextCapitalization.words,
                           obscureText: show1 ? false : true,
                           validator: FormBuilderValidators.compose(
                             [
-                              FormBuilderValidators.required(
-                                  errorText: "Confirm Password can't be empty"),
                               FormBuilderValidators.match(
                                   passwordController.text,
                                   errorText: "Confirm Password must be same"),
                             ],
                           ),
                           onChanged: (value) {
-                            if (_key.currentState!.validate()) {
+                            if (_key.currentState!.validate() && passwordController.text != ""
+                            && confirmPasswordController.text != "" ) {
                               setState(() {
                                 isDisable = false;
                               });
@@ -281,8 +318,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         )
                       : CupertinoButton(
                           onPressed: () {
-                            // signUp(emailController.text.trim(),
-                            //     passwordController.text.trim());
+                            signUp(emailController.text.trim(),
+                                passwordController.text.trim());
                           },
                           color: Theme.of(context).colorScheme.secondary,
                           child: const Text(
