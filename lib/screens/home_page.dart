@@ -1,4 +1,5 @@
 import 'package:chat_app/models/user_model.dart';
+import 'package:chat_app/screens/auth/login_page.dart';
 import 'package:chat_app/screens/search_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -21,6 +22,12 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text("Chat App"),
         centerTitle: true,
+        actions: [IconButton(onPressed: (){
+          FirebaseAuth.instance.signOut();
+          Navigator.push(context, CupertinoPageRoute(builder: (context){
+            return const LoginPage();
+          }));
+        }, icon: const Icon(Icons.logout_outlined))],
       ),
       
       body: SafeArea(

@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:chat_app/models/chat_room_model.dart';
 import 'package:chat_app/models/user_model.dart';
 import 'package:chat_app/screens/chat_room_page.dart';
 import 'package:chat_app/utility/colors.dart';
@@ -19,6 +22,22 @@ class SearchPage extends StatefulWidget {
 
 class SearchPageState extends State<SearchPage> {
   TextEditingController phoneController = TextEditingController();
+  Future<ChatRoomModel?> getChatroomModel(UserModel targetUser)async{
+   QuerySnapshot snapshot = await FirebaseFirestore.instance.collection("chatrooms").
+    where("participants.${widget.userModel.uid}",isEqualTo: true).
+    where("participants.${targetUser.uid}",isEqualTo: true).get();
+
+    if(snapshot.docs.isNotEmpty){
+      // chat room exist
+      log("Chat room already exists");
+    }
+    else{
+      // create chat room 
+      log("Create chat room");
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +76,7 @@ class SearchPageState extends State<SearchPage> {
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.push(context, CupertinoPageRoute(builder: (context) {
-                                      return const ChatRoomPage();
+                                      return  ChatRoomPage(firebaseUser: widget.firebaseUser,userModel: widget.userModel,targetUser: searchUser,);
                                     },));
                                   },
                                   title: Text(searchUser.fullname!.toString(),),
