@@ -1,14 +1,17 @@
-import 'dart:developer';
+// ignore_for_file: use_build_context_synchronously
 
+import 'dart:developer';
+import 'package:chat_app/main.dart';
 import 'package:chat_app/models/chat_room_model.dart';
 import 'package:chat_app/models/user_model.dart';
-import 'package:chat_app/screens/chat_room_page.dart';
 import 'package:chat_app/utility/colors.dart';
 import 'package:chat_app/utility/utility.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'chat_room_page.dart';
 
 class SearchPage extends StatefulWidget {
   final UserModel userModel;
@@ -22,19 +25,36 @@ class SearchPage extends StatefulWidget {
 
 class SearchPageState extends State<SearchPage> {
   TextEditingController phoneController = TextEditingController();
+  // method for create / check chat room model
   Future<ChatRoomModel?> getChatroomModel(UserModel targetUser)async{
+    ChatRoomModel? chatRoom;
    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection("chatrooms").
-    where("participants.${widget.userModel.uid}",isEqualTo: true).
-    where("participants.${targetUser.uid}",isEqualTo: true).get();
+    where("participant.${widget.userModel.uid}",isEqualTo: true).
+    where("participant.${targetUser.uid}",isEqualTo: true).get();
 
     if(snapshot.docs.isNotEmpty){
       // chat room exist
+      var varData = snapshot.docs[0].data();
+      ChatRoomModel existingChatRoom = ChatRoomModel.fromMap(varData as Map<String,dynamic>);
+
+      chatRoom = existingChatRoom;
       log("Chat room already exists");
     }
     else{
       // create chat room 
+      ChatRoomModel newChatRoom = ChatRoomModel(
+        chatroomid: uuid.v1(),
+        lastMessage: "",
+        participant: {
+          targetUser.uid.toString(): true,
+          widget.userModel.uid.toString(): true,
+        }
+      );
+      await FirebaseFirestore.instance.collection("chatrooms").doc(newChatRoom.chatroomid).set(newChatRoom.toMap());
+      chatRoom = newChatRoom;
       log("Create chat room");
     }
+    return chatRoom;
   }
 
 
@@ -73,11 +93,15 @@ class SearchPageState extends State<SearchPage> {
                                 Map<String,dynamic> mapUser = dataSnapshort.docs[0].data() as Map<String,dynamic>;
                                 UserModel searchUser = UserModel.fromMap(mapUser);
                                 return ListTile(
-                                  onTap: () {
+                                  onTap: () async{
+                                    ChatRoomModel? chatRoomModel = await getChatroomModel(searchUser);
+                                    if(chatRoomModel != null){
                                     Navigator.pop(context);
                                     Navigator.push(context, CupertinoPageRoute(builder: (context) {
-                                      return  ChatRoomPage(firebaseUser: widget.firebaseUser,userModel: widget.userModel,targetUser: searchUser,);
+                                      return  ChatRoomPage(firebaseUser: widget.firebaseUser,userModel: widget.userModel,targetUser: searchUser,chatroom: chatRoomModel,);
                                     },));
+                                      
+                                    }
                                   },
                                   title: Text(searchUser.fullname!.toString(),),
                                   subtitle: Text(searchUser.email!.toString()),

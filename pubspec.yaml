@@ -19,6 +19,7 @@ dependencies:
   font_awesome_flutter: ^10.4.0
   image_picker: ^1.0.4
   image_cropper: ^5.0.0
+  uuid: ^4.2.1
 
 dev_dependencies:
   flutter_test:
