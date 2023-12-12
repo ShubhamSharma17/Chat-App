@@ -24,30 +24,38 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormBuilderState> _key = GlobalKey<FormBuilderState>();
-  
+
   // login method..
-  void logIn(String email, String password)async{
+  void logIn(String email, String password) async {
     UserCredential? credential;
-    try{
-      credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email, password: password
-        );
-    } on FirebaseException catch(error){
+    try {
+      credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+    } on FirebaseException catch (error) {
       log(error.message.toString());
     }
-    if(credential != null){
+    if (credential != null) {
       String uid = credential.user!.uid;
 
-      DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection("user").doc(uid).get();
-      UserModel userData = UserModel.fromMap(snapshot.data() as Map<String,dynamic>);
+      DocumentSnapshot snapshot =
+          await FirebaseFirestore.instance.collection("user").doc(uid).get();
+      UserModel userData =
+          UserModel.fromMap(snapshot.data() as Map<String, dynamic>);
 
       // now you can to to other screen
       log("Login SuccessFully:)");
-      Navigator.push(context, CupertinoPageRoute(builder: (context) {
-        return HomePage(firebaseUser: credential!.user!,userModel: userData,);
-      },));
+      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.pushReplacement(context, CupertinoPageRoute(
+        builder: (context) {
+          return HomePage(
+            firebaseUser: credential!.user!,
+            userModel: userData,
+          );
+        },
+      ));
     }
   }
+
   bool isDisable = true;
   bool show = false;
   TextEditingController emailController = TextEditingController();
@@ -84,9 +92,11 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.emailAddress,
                       textCapitalization: TextCapitalization.words,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: FormBuilderValidators.email(errorText: "Please Enter Valid Email Address"),
+                      validator: FormBuilderValidators.email(
+                          errorText: "Please Enter Valid Email Address"),
                       onChanged: (value) {
-                        if (_key.currentState!.validate() && passwordController.text != "") {
+                        if (_key.currentState!.validate() &&
+                            passwordController.text != "") {
                           setState(() {
                             isDisable = false;
                           });
@@ -144,7 +154,8 @@ class _LoginPageState extends State<LoginPage> {
                       //   errorText: "Password can't be empty",
                       // ),
                       onChanged: (value) {
-                        if (_key.currentState!.validate() && passwordController.text != "") {
+                        if (_key.currentState!.validate() &&
+                            passwordController.text != "") {
                           setState(() {
                             isDisable = false;
                           });
@@ -207,28 +218,30 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               verticalSpacesLarge,
-             isDisable? CupertinoButton(
-                color: gray939393,
-                child: const Text(
-                  "Log In",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                onPressed: () {},
-              ):
-              CupertinoButton(
-                color: blue,
-                child: const Text(
-                  "Log In",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                onPressed: () { logIn(
-                  emailController.text.trim(), passwordController.text.trim()
-                );},
-              )
+              isDisable
+                  ? CupertinoButton(
+                      color: gray939393,
+                      child: const Text(
+                        "Log In",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onPressed: () {},
+                    )
+                  : CupertinoButton(
+                      color: blue,
+                      child: const Text(
+                        "Log In",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onPressed: () {
+                        logIn(emailController.text.trim(),
+                            passwordController.text.trim());
+                      },
+                    )
             ],
           ),
         )),

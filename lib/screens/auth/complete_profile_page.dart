@@ -19,56 +19,53 @@ class CompleteProfilePage extends StatefulWidget {
   final UserModel userModel;
   final User firebaseUser;
 
-  const CompleteProfilePage({super.key, required this.userModel, required this.firebaseUser});
-  
+  const CompleteProfilePage(
+      {super.key, required this.userModel, required this.firebaseUser});
 
   @override
   State<CompleteProfilePage> createState() => _CompleteProfilePageState();
 }
 
 class _CompleteProfilePageState extends State<CompleteProfilePage> {
+  final GlobalKey<FormBuilderState> key = GlobalKey<FormBuilderState>();
+  TextEditingController fullnameController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
+  bool isDisable = true;
 
-   final GlobalKey<FormBuilderState> key = GlobalKey<FormBuilderState>();
-    TextEditingController fullnameController = TextEditingController();
-    TextEditingController phoneNumberController = TextEditingController();
-    bool isDisable = true;
+  File? imageFile;
 
-    File? imageFile;
-    
-    // method for crop image
-    void croppedImage(XFile file) async {
-      CroppedFile? croppedImage = await ImageCropper().cropImage(
-        sourcePath: file.path,
-        compressQuality: 70,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        );
+  // method for crop image
+  void croppedImage(XFile file) async {
+    CroppedFile? croppedImage = await ImageCropper().cropImage(
+      sourcePath: file.path,
+      compressQuality: 70,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+    );
 
-      if(croppedImage != null){
-        setState(() {
-          imageFile = File(croppedImage.path);
-        });
-      }
+    if (croppedImage != null) {
+      setState(() {
+        imageFile = File(croppedImage.path);
+      });
     }
+  }
 
+  // method for select image
+  void selectImage(ImageSource source) async {
+    XFile? pickedImage = await ImagePicker().pickImage(source: source);
 
-    // method for select image
-    void selectImage(ImageSource source)async{
-     XFile? pickedImage = await ImagePicker().pickImage(source: source);
-
-     if(pickedImage != null){
+    if (pickedImage != null) {
       croppedImage(pickedImage);
-     }
     }
+  }
 
-
-    // method for showing photo option
-    void showPhotoOption(){
-      showDialog(context: context, builder: (context) {
-        return  AlertDialog(
+  // method for showing photo option
+  void showPhotoOption() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
           title: const Text("Upload Profile Picture"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
             ListTile(
               onTap: () {
                 Navigator.pop(context);
@@ -77,49 +74,62 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
               title: const Text("Select from gallery"),
               leading: const Icon(Icons.photo),
             ),
-             ListTile(
+            ListTile(
               onTap: () {
                 Navigator.pop(context);
                 selectImage(ImageSource.camera);
               },
               title: const Text("Select from Camera"),
               leading: const Icon(Icons.camera),
-
             ),
           ]),
         );
-      },);
-    }
+      },
+    );
+  }
 
-    // method for upload data..
-    void uploadData()async{
+  // method for upload data..
+  void uploadData() async {
+    // create upload data for image in firebase storage
+    UploadTask task = FirebaseStorage.instance
+        .ref("Profile Image")
+        .child(widget.userModel.uid.toString())
+        .putFile(imageFile!);
 
-      // create upload data for image in firebase storage
-      UploadTask task = FirebaseStorage.instance.ref("Profile Image").child(widget.userModel.uid.toString()).putFile(imageFile!);
-      
-      // uploading image
-      TaskSnapshot snapshot =  await task;
-      log("Uploading Data...");
+    // uploading image
+    TaskSnapshot snapshot = await task;
+    log("Uploading Data...");
 
-      // get imageUrl from that snapshot
-      String imageUrl = await snapshot.ref.getDownloadURL();
-      String name = fullnameController.text;
-      String phoneNumber = phoneNumberController.text;
+    // get imageUrl from that snapshot
+    String imageUrl = await snapshot.ref.getDownloadURL();
+    String name = fullnameController.text;
+    String phoneNumber = phoneNumberController.text;
 
-      // assign data in user model which we get from complete profile screen 
-      widget.userModel.fullname = name;
-      widget.userModel.profilepic = imageUrl;
-      widget.userModel.phoneNumber = phoneNumber;
+    // assign data in user model which we get from complete profile screen
+    widget.userModel.fullname = name;
+    widget.userModel.profilepic = imageUrl;
+    widget.userModel.phoneNumber = phoneNumber;
 
-      // upload user data on firebase
-      await FirebaseFirestore.instance.collection("user").doc(widget.userModel.uid!).set(widget.userModel.toMap());
-      log("Data Uploaded:)");
-      Navigator.push(context, CupertinoPageRoute(builder: (context) {
-        return HomePage(firebaseUser: widget.firebaseUser,userModel: widget.userModel,);
-      },));
+    // upload user data on firebase
+    await FirebaseFirestore.instance
+        .collection("user")
+        .doc(widget.userModel.uid!)
+        .set(widget.userModel.toMap());
+    log("Data Uploaded:)");
+    Navigator.popUntil(context, (route) => route.isFirst);
+    Navigator.pushReplacement(
+      context,
+      CupertinoPageRoute(
+        builder: (context) {
+          return HomePage(
+            firebaseUser: widget.firebaseUser,
+            userModel: widget.userModel,
+          );
+        },
+      ),
+    );
+  }
 
-
-    }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -145,7 +155,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 showPhotoOption();
               },
               padding: const EdgeInsets.all(0),
-              child:  CircleAvatar(
+              child: CircleAvatar(
                 radius: 60,
                 backgroundImage:
                     imageFile != null ? FileImage(imageFile!) : null,
@@ -168,8 +178,10 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       textCapitalization: TextCapitalization.words,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       onChanged: (value) {
-                        if (key.currentState!.validate() && fullnameController.text != ""
-                              && phoneNumberController.text.length == 10 && imageFile != null) {
+                        if (key.currentState!.validate() &&
+                            fullnameController.text != "" &&
+                            phoneNumberController.text.length == 10 &&
+                            imageFile != null) {
                           setState(() {
                             isDisable = false;
                           });
@@ -221,8 +233,10 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       maxLength: 10,
                       onChanged: (value) {
-                        if (key.currentState!.validate()&& fullnameController.text != ""
-                              && phoneNumberController.text.length == 10 && imageFile != null) {
+                        if (key.currentState!.validate() &&
+                            fullnameController.text != "" &&
+                            phoneNumberController.text.length == 10 &&
+                            imageFile != null) {
                           setState(() {
                             isDisable = false;
                           });

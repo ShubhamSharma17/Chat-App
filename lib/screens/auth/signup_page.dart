@@ -13,10 +13,7 @@ import '../../utility/colors.dart';
 import '../../utility/utility.dart';
 
 class SignUpPage extends StatefulWidget {
-  
-
   const SignUpPage({super.key});
-  
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -32,14 +29,15 @@ class _SignUpPageState extends State<SignUpPage> {
   bool show1 = false;
 
   // method for sign up..
-  void signUp(String email, String password)async{
+  void signUp(String email, String password) async {
     UserCredential? credential;
-    try{
-      credential =await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
-    } on FirebaseException catch(error){
+    try {
+      credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+    } on FirebaseException catch (error) {
       log(error.code.toString());
     }
-    if(credential != null){
+    if (credential != null) {
       String uid = credential.user!.uid;
       UserModel userModel = UserModel(
         email: email,
@@ -48,17 +46,29 @@ class _SignUpPageState extends State<SignUpPage> {
         phoneNumber: "",
         profilepic: "",
       );
-      await FirebaseFirestore.instance.collection("user").doc(uid).set(userModel.toMap()).then((value) {
+      await FirebaseFirestore.instance
+          .collection("user")
+          .doc(uid)
+          .set(userModel.toMap())
+          .then((value) {
         emailController.clear();
         passwordController.clear();
         confirmPasswordController.clear();
         log("User Has been created!");
-        Navigator.push(context, CupertinoPageRoute(builder: (context) {
-          return CompleteProfilePage(userModel: userModel, firebaseUser: credential!.user!);
-        },));
+        Navigator.popUntil(context, (route) => route.isFirst);
+        Navigator.pushReplacement(
+          context,
+          CupertinoPageRoute(
+            builder: (context) {
+              return CompleteProfilePage(
+                  userModel: userModel, firebaseUser: credential!.user!);
+            },
+          ),
+        );
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -81,7 +91,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   SizedBox(height: screenHeight(context) * .05),
                   // form builder..
                   FormBuilder(
-                    
                     key: _key,
                     child: Column(
                       children: [
@@ -96,8 +105,9 @@ class _SignUpPageState extends State<SignUpPage> {
                             errorText: "Please Enter Valid Email Address",
                           ),
                           onChanged: (value) {
-                            if (_key.currentState!.validate() && passwordController.text != ""
-                            && confirmPasswordController.text != "" ) {
+                            if (_key.currentState!.validate() &&
+                                passwordController.text != "" &&
+                                confirmPasswordController.text != "") {
                               setState(() {
                                 isDisable = false;
                               });
@@ -159,8 +169,9 @@ class _SignUpPageState extends State<SignUpPage> {
                             ],
                           ),
                           onChanged: (value) {
-                            if (_key.currentState!.validate() && passwordController.text != ""
-                            && confirmPasswordController.text != "" ) {
+                            if (_key.currentState!.validate() &&
+                                passwordController.text != "" &&
+                                confirmPasswordController.text != "") {
                               setState(() {
                                 isDisable = false;
                               });
@@ -237,8 +248,9 @@ class _SignUpPageState extends State<SignUpPage> {
                             ],
                           ),
                           onChanged: (value) {
-                            if (_key.currentState!.validate() && passwordController.text != ""
-                            && confirmPasswordController.text != "" ) {
+                            if (_key.currentState!.validate() &&
+                                passwordController.text != "" &&
+                                confirmPasswordController.text != "") {
                               setState(() {
                                 isDisable = false;
                               });
