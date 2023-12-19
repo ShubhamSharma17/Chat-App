@@ -131,8 +131,9 @@ class SearchPageState extends State<SearchPage> {
                         ),
                         subtitle: Text(searchUser.email!.toString()),
                         leading: CircleAvatar(
-                            backgroundImage:
-                                NetworkImage(searchUser.profilepic!)),
+                          backgroundColor: blue,
+                          backgroundImage: NetworkImage(searchUser.profilepic!),
+                        ),
                         trailing: const Icon(Icons.keyboard_arrow_right_sharp),
                       );
                     } else {

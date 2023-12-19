@@ -25,126 +25,129 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Chat App"),
-        centerTitle: true,
-        actions: [
-          IconButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.popUntil(context, (route) => route.isFirst);
-                Navigator.pushReplacement(context,
-                    CupertinoPageRoute(builder: (context) {
-                  return const LoginPage();
-                }));
-              },
-              icon: const Icon(Icons.logout_outlined))
-        ],
-      ),
-      body: SafeArea(
-        child: SizedBox(
-          child: StreamBuilder(
-            stream: FirebaseFirestore.instance
-                .collection("chatrooms")
-                .where("users", arrayContains: widget.userModel.uid)
-                .orderBy("createdOn")
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.active) {
-                if (snapshot.hasData) {
-                  QuerySnapshot chatRoomSnapshot =
-                      snapshot.data as QuerySnapshot;
-
-                  return ListView.builder(
-                    itemCount: chatRoomSnapshot.docs.length,
-                    itemBuilder: (context, index) {
-                      ChatRoomModel chatRoomModel = ChatRoomModel.fromMap(
-                          chatRoomSnapshot.docs[index].data()
-                              as Map<String, dynamic>);
-
-                      Map<String, dynamic> participant =
-                          chatRoomModel.participant!;
-
-                      List<String> participantKeys = participant.keys.toList();
-
-                      participantKeys.remove(widget.userModel.uid);
-
-                      return FutureBuilder(
-                        future:
-                            FirebaseHelperModel.getUserById(participantKeys[0]),
-                        builder: (context, userData) {
-                          if (userData.connectionState ==
-                              ConnectionState.done) {
-                            if (userData.data != null) {
-                              UserModel targetUser = userData.data as UserModel;
-
-                              return ListTile(
-                                onTap: () {
-                                  Navigator.push(context, CupertinoPageRoute(
-                                    builder: (context) {
-                                      return ChatRoomPage(
-                                        targetUser: targetUser,
-                                        chatroom: chatRoomModel,
-                                        userModel: widget.userModel,
-                                        firebaseUser: widget.firebaseUser,
-                                      );
-                                    },
-                                  ));
-                                },
-                                leading: CircleAvatar(
-                                  backgroundColor: white,
-                                  backgroundImage:
-                                      NetworkImage(targetUser.profilepic!),
-                                ),
-                                title: Text(targetUser.fullname.toString()),
-                                subtitle: chatRoomModel.lastMessage == ""
-                                    ? const Text(
-                                        "Say hi to your friend!",
-                                        style: TextStyle(color: blue),
-                                      )
-                                    : Text(
-                                        chatRoomModel.lastMessage.toString(),
-                                        style:
-                                            const TextStyle(color: gray939393),
-                                      ),
-                              );
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: blue,
+          title: const Text("Chat App"),
+          centerTitle: true,
+          actions: [
+            IconButton(
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                  Navigator.pushReplacement(context,
+                      CupertinoPageRoute(builder: (context) {
+                    return const LoginPage();
+                  }));
+                },
+                icon: const Icon(Icons.logout_outlined))
+          ],
+        ),
+        body: SafeArea(
+          child: SizedBox(
+            child: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection("chatrooms")
+                  .where("users", arrayContains: widget.userModel.uid)
+                  .orderBy("createdOn")
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  if (snapshot.hasData) {
+                    QuerySnapshot chatRoomSnapshot =
+                        snapshot.data as QuerySnapshot;
+      
+                    return ListView.builder(
+                      itemCount: chatRoomSnapshot.docs.length,
+                      itemBuilder: (context, index) {
+                        ChatRoomModel chatRoomModel = ChatRoomModel.fromMap(
+                            chatRoomSnapshot.docs[index].data()
+                                as Map<String, dynamic>);
+      
+                        Map<String, dynamic> participant =
+                            chatRoomModel.participant!;
+      
+                        List<String> participantKeys = participant.keys.toList();
+      
+                        participantKeys.remove(widget.userModel.uid);
+      
+                        return FutureBuilder(
+                          future:
+                              FirebaseHelperModel.getUserById(participantKeys[0]),
+                          builder: (context, userData) {
+                            if (userData.connectionState ==
+                                ConnectionState.done) {
+                              if (userData.data != null) {
+                                UserModel targetUser = userData.data as UserModel;
+      
+                                return ListTile(
+                                  onTap: () {
+                                    Navigator.push(context, CupertinoPageRoute(
+                                      builder: (context) {
+                                        return ChatRoomPage(
+                                          targetUser: targetUser,
+                                          chatroom: chatRoomModel,
+                                          userModel: widget.userModel,
+                                          firebaseUser: widget.firebaseUser,
+                                        );
+                                      },
+                                    ));
+                                  },
+                                  leading: CircleAvatar(
+                                    backgroundColor: blue,
+                                    backgroundImage:
+                                        NetworkImage(targetUser.profilepic!),
+                                  ),
+                                  title: Text(targetUser.fullname.toString()),
+                                  subtitle: chatRoomModel.lastMessage == ""
+                                      ? const Text(
+                                          "Say hi to your friend!",
+                                          style: TextStyle(color: blue),
+                                        )
+                                      : Text(
+                                          chatRoomModel.lastMessage.toString(),
+                                          style:
+                                              const TextStyle(color: gray939393),
+                                        ),
+                                );
+                              } else {
+                                return Container();
+                              }
                             } else {
                               return Container();
                             }
-                          } else {
-                            return Container();
-                          }
-                        },
-                      );
-                    },
-                  );
-                } else if (snapshot.hasError) {
-                  return Text(snapshot.error.toString());
+                          },
+                        );
+                      },
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text(snapshot.error.toString());
+                  } else {
+                    return const Text("No Chat!");
+                  }
                 } else {
-                  return const Text("No Chat!");
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
                 }
-              } else {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
+              },
+            ),
           ),
         ),
+        floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(context, CupertinoPageRoute(
+                builder: (context) {
+                  return SearchPage(
+                    firebaseUser: widget.firebaseUser,
+                    userModel: widget.userModel,
+                  );
+                },
+              ));
+            },
+            child: const Icon(Icons.search)),
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(context, CupertinoPageRoute(
-              builder: (context) {
-                return SearchPage(
-                  firebaseUser: widget.firebaseUser,
-                  userModel: widget.userModel,
-                );
-              },
-            ));
-          },
-          child: const Icon(Icons.search)),
     );
   }
 }

@@ -10,13 +10,13 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  firebase_auth: ^4.12.1
-  cloud_firestore: ^4.12.2
-  firebase_storage: ^11.4.1
-  firebase_core: ^2.21.0
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.5.6
+  firebase_core: ^2.24.2
   flutter_form_builder: ^9.1.1
   form_builder_validators: ^9.1.0
-  font_awesome_flutter: ^10.4.0
+  font_awesome_flutter: ^10.6.0
   image_picker: ^1.0.4
   image_cropper: ^5.0.0
   uuid: ^4.2.1

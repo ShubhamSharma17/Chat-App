@@ -1,7 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:developer';
 
 import 'package:chat_app/models/user_model.dart';
 import 'package:chat_app/screens/auth/complete_profile_page.dart';
+import 'package:chat_app/utility/ui_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,13 +31,38 @@ class _SignUpPageState extends State<SignUpPage> {
   bool show = false;
   bool show1 = false;
 
+
+  // method for check value
+  void checkValue(){
+    String email = emailController.text.toString();
+    String password = passwordController.text.toString();
+    String confirmPassword = confirmPasswordController.text.toString();
+
+    if(email == ""){
+      UIHelper.showAlertDialog(context,"error" ,"Email can't be empty" );
+    }
+    else if( password == "" || confirmPassword == ""){
+      UIHelper.showAlertDialog(context,"error" ,"password can't be empty" );
+    }
+    else if(password != confirmPassword){
+      UIHelper.showAlertDialog(context,"error" ,"password doesn't match" );
+    }
+    else{
+      signUp(email, password);
+    }
+  }
+
   // method for sign up..
   void signUp(String email, String password) async {
+    UIHelper.showLoadingDialog(context, "Creating New Account....");
     UserCredential? credential;
     try {
       credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
     } on FirebaseException catch (error) {
+      Navigator.pop(context);
+      UIHelper.showAlertDialog(
+          context, "An Error Occurred", error.code.toString());
       log(error.code.toString());
     }
     if (credential != null) {
@@ -68,6 +96,7 @@ class _SignUpPageState extends State<SignUpPage> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +147,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             }
                           },
                           decoration: InputDecoration(
+                            
                             // icon
                             prefixIcon: IconButton(
                                 onPressed: () {},
@@ -126,11 +156,11 @@ class _SignUpPageState extends State<SignUpPage> {
                                   color: blue04C2F1,
                                   size: 23,
                                 )),
-                            fillColor: blueF4FDFFCC,
                             hintText: "Enter Email",
                             labelText: "Email",
-                            // filled: true,
-                            enabledBorder: OutlineInputBorder(
+                            fillColor: blueF4FDFFCC,
+                            filled: true,
+                           enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(100),
                               borderSide: const BorderSide(
                                 color: blueD1F5FF,
@@ -160,27 +190,27 @@ class _SignUpPageState extends State<SignUpPage> {
                           controller: passwordController,
                           keyboardType: TextInputType.text,
                           textCapitalization: TextCapitalization.words,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          validator: FormBuilderValidators.compose(
-                            [
-                              FormBuilderValidators.match(
-                                  confirmPasswordController.text,
-                                  errorText: "Password must be same"),
-                            ],
-                          ),
-                          onChanged: (value) {
-                            if (_key.currentState!.validate() &&
-                                passwordController.text != "" &&
-                                confirmPasswordController.text != "") {
-                              setState(() {
-                                isDisable = false;
-                              });
-                            } else {
-                              setState(() {
-                                isDisable = true;
-                              });
-                            }
-                          },
+                          // autovalidateMode: AutovalidateMode.onUserInteraction,
+                          // validator: FormBuilderValidators.compose(
+                          //   [
+                          //     FormBuilderValidators.match(
+                          //         confirmPasswordController.text,
+                          //         errorText: "Password must be same"),
+                          //   ],
+                          // ),
+                          // onChanged: (value) {
+                          //   if (_key.currentState!.validate() &&
+                          //       passwordController.text != "" &&
+                          //       confirmPasswordController.text != "") {
+                          //     setState(() {
+                          //       isDisable = false;
+                          //     });
+                          //   } else {
+                          //     setState(() {
+                          //       isDisable = true;
+                          //     });
+                          //   }
+                          // },
                           decoration: InputDecoration(
                             labelText: "Password",
                             hintText: "Enter Password",
@@ -232,6 +262,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                         ),
                         SizedBox(height: screenHeight(context) * .02),
+
                         // confirm password text field..
                         FormBuilderTextField(
                           name: "Confirm Password",
@@ -240,26 +271,26 @@ class _SignUpPageState extends State<SignUpPage> {
                           keyboardType: TextInputType.text,
                           textCapitalization: TextCapitalization.words,
                           obscureText: show1 ? false : true,
-                          validator: FormBuilderValidators.compose(
-                            [
-                              FormBuilderValidators.match(
-                                  passwordController.text,
-                                  errorText: "Confirm Password must be same"),
-                            ],
-                          ),
-                          onChanged: (value) {
-                            if (_key.currentState!.validate() &&
-                                passwordController.text != "" &&
-                                confirmPasswordController.text != "") {
-                              setState(() {
-                                isDisable = false;
-                              });
-                            } else {
-                              setState(() {
-                                isDisable = true;
-                              });
-                            }
-                          },
+                          // validator: FormBuilderValidators.compose(
+                          //   [
+                          //     FormBuilderValidators.match(
+                          //         passwordController.text,
+                          //         errorText: "Confirm Password must be same"),
+                          //   ],
+                          // ),
+                          // onChanged: (value) {
+                          //   if (_key.currentState!.validate() &&
+                          //       passwordController.text != "" &&
+                          //       confirmPasswordController.text != "") {
+                          //     setState(() {
+                          //       isDisable = false;
+                          //     });
+                          //   } else {
+                          //     setState(() {
+                          //       isDisable = true;
+                          //     });
+                          //   }
+                          // },
                           decoration: InputDecoration(
                             labelText: "Confirm Password",
                             hintText: "Enter Confirm Password",
@@ -315,23 +346,25 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   verticalSpaceMedium,
                   // sign up button..
-                  isDisable
-                      ? CupertinoButton(
-                          onPressed: () {},
-                          color: gray8F959E,
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        )
-                      : CupertinoButton(
+                  // isDisable
+                  //     ? CupertinoButton(
+                  //         onPressed: () {},
+                  //         color: gray8F959E,
+                  //         child: const Text(
+                  //           "Sign Up",
+                  //           style: TextStyle(
+                  //             color: Colors.white,
+                  //             fontWeight: FontWeight.w500,
+                  //             letterSpacing: 0.5,
+                  //           ),
+                  //         ),
+                  //       )
+                  //     : 
+                      CupertinoButton(
                           onPressed: () {
-                            signUp(emailController.text.trim(),
-                                passwordController.text.trim());
+                            // signUp(emailController.text.trim(),
+                            //     passwordController.text.trim());
+                            checkValue();
                           },
                           color: Theme.of(context).colorScheme.secondary,
                           child: const Text(

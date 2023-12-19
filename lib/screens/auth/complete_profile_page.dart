@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:chat_app/models/user_model.dart';
 import 'package:chat_app/screens/home_page.dart';
 import 'package:chat_app/utility/colors.dart';
+import 'package:chat_app/utility/ui_helper.dart';
 import 'package:chat_app/utility/utility.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -88,8 +89,29 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     );
   }
 
+  // method for check value
+  void checkValue(){
+    String email = fullnameController.text.toString();
+    String phoneNumber = phoneNumberController.text.toString();
+    File? finalImage = imageFile!;
+
+    if(email == ""){
+      UIHelper.showAlertDialog(context,"error" ,"Name can't be empty" );
+    }
+    else if(phoneNumber == ""){
+      UIHelper.showAlertDialog(context,"error" ,"Phone Number can't be empty" );
+    }
+    else if(finalImage.path == ""){
+      UIHelper.showAlertDialog(context,"error" ,"Profile Image is required" );
+    }
+    else{
+      uploadData();
+    }
+  }
+
   // method for upload data..
   void uploadData() async {
+    UIHelper.showLoadingDialog(context, "Uploading Data...");
     // create upload data for image in firebase storage
     UploadTask task = FirebaseStorage.instance
         .ref("Profile Image")
@@ -177,20 +199,20 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       keyboardType: TextInputType.text,
                       textCapitalization: TextCapitalization.words,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      onChanged: (value) {
-                        if (key.currentState!.validate() &&
-                            fullnameController.text != "" &&
-                            phoneNumberController.text.length == 10 &&
-                            imageFile != null) {
-                          setState(() {
-                            isDisable = false;
-                          });
-                        } else {
-                          setState(() {
-                            isDisable = true;
-                          });
-                        }
-                      },
+                      // onChanged: (value) {
+                      //   if (key.currentState!.validate() &&
+                      //       fullnameController.text != "" &&
+                      //       phoneNumberController.text.length == 10 &&
+                      //       imageFile != null) {
+                      //     setState(() {
+                      //       isDisable = false;
+                      //     });
+                      //   } else {
+                      //     setState(() {
+                      //       isDisable = true;
+                      //     });
+                      //   }
+                      // },
                       decoration: InputDecoration(
                         // icon
                         prefixIcon: IconButton(
@@ -232,20 +254,20 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       textCapitalization: TextCapitalization.words,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       maxLength: 10,
-                      onChanged: (value) {
-                        if (key.currentState!.validate() &&
-                            fullnameController.text != "" &&
-                            phoneNumberController.text.length == 10 &&
-                            imageFile != null) {
-                          setState(() {
-                            isDisable = false;
-                          });
-                        } else {
-                          setState(() {
-                            isDisable = true;
-                          });
-                        }
-                      },
+                      // onChanged: (value) {
+                      //   if (key.currentState!.validate() &&
+                      //       fullnameController.text != "" &&
+                      //       phoneNumberController.text.length == 10 &&
+                      //       imageFile != null) {
+                      //     setState(() {
+                      //       isDisable = false;
+                      //     });
+                      //   } else {
+                      //     setState(() {
+                      //       isDisable = true;
+                      //     });
+                      //   }
+                      // },
                       decoration: InputDecoration(
                         // icon
                         prefixIcon: IconButton(
@@ -282,7 +304,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 )),
             verticalSpaceMedium,
             // submit button..
-            isDisable
+            imageFile == null
                 ? CupertinoButton(
                     onPressed: () {},
                     color: gray8F959E,
@@ -295,9 +317,11 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       ),
                     ),
                   )
-                : CupertinoButton(
+                :
+                 CupertinoButton(
                     onPressed: () {
-                      uploadData();
+                      // uploadData();
+                      checkValue();
                     },
                     color: Theme.of(context).colorScheme.secondary,
                     child: const Text(

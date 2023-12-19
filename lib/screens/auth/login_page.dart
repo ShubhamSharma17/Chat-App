@@ -6,6 +6,7 @@ import 'package:chat_app/models/user_model.dart';
 import 'package:chat_app/screens/auth/signup_page.dart';
 import 'package:chat_app/screens/home_page.dart';
 import 'package:chat_app/utility/colors.dart';
+import 'package:chat_app/utility/ui_helper.dart';
 import 'package:chat_app/utility/utility.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +26,9 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormBuilderState> _key = GlobalKey<FormBuilderState>();
 
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
   // login method..
   void logIn(String email, String password) async {
     UserCredential? credential;
@@ -32,9 +36,13 @@ class _LoginPageState extends State<LoginPage> {
       credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseException catch (error) {
+      // Navigator.pop(context);
+      UIHelper.showAlertDialog(
+          context, "An error ocurred", error.message.toString());
       log(error.message.toString());
     }
     if (credential != null) {
+    UIHelper.showLoadingDialog(context, "Login....");
       String uid = credential.user!.uid;
 
       DocumentSnapshot snapshot =
@@ -44,6 +52,8 @@ class _LoginPageState extends State<LoginPage> {
 
       // now you can to to other screen
       log("Login SuccessFully:)");
+      emailController.clear();
+      passwordController.clear();
       Navigator.popUntil(context, (route) => route.isFirst);
       Navigator.pushReplacement(context, CupertinoPageRoute(
         builder: (context) {
@@ -58,8 +68,6 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isDisable = true;
   bool show = false;
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
