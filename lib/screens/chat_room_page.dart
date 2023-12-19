@@ -65,16 +65,16 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: blue,
+            backgroundColor: blue,
             title: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: NetworkImage(widget.targetUser.profilepic!),
-            ),
-            horizontalSpaceSmall,
-            Text(widget.targetUser.fullname!),
-          ],
-        )),
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(widget.targetUser.profilepic!),
+                ),
+                horizontalSpaceSmall,
+                Text(widget.targetUser.fullname!),
+              ],
+            )),
         body: SafeArea(
           child: SizedBox(
             child: Column(
@@ -100,18 +100,28 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                             reverse: true,
                             itemCount: querySnapshot.docs.length,
                             itemBuilder: (context, index) {
-                              MessageModel currentMessage = MessageModel.fromMap(
-                                  querySnapshot.docs[index].data()
-                                      as Map<String, dynamic>);
+                              MessageModel currentMessage =
+                                  MessageModel.fromMap(querySnapshot.docs[index]
+                                      .data() as Map<String, dynamic>);
                               return Row(
                                 mainAxisAlignment: widget.userModel.uid ==
                                         currentMessage.sender.toString()
                                     ? MainAxisAlignment.end
                                     : MainAxisAlignment.start,
                                 children: [
+                                  widget.userModel.uid ==
+                                        currentMessage.sender.toString()?
+                                  Text(
+                                    currentMessage.createdon!
+                                        .toString()
+                                        .substring(10, 16),
+                                    style: const TextStyle(color: gray8F959E),
+                                  )
+                                  :const Text(""),
+                                  horizontalSpaceSmall,
                                   Container(
-                                      margin:
-                                          const EdgeInsets.symmetric(vertical: 5),
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 5),
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 10, horizontal: 10),
                                       decoration: BoxDecoration(
@@ -123,6 +133,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       ),
                                       child:
                                           Text(currentMessage.text.toString())),
+                                          widget.userModel.uid !=
+                                        currentMessage.sender.toString()?
+                                  Text(
+                                    currentMessage.createdon!
+                                        .toString()
+                                        .substring(10, 16),
+                                    style: const TextStyle(color: gray8F959E),
+                                  )
+                                  :const Text(""),
                                 ],
                               );
                             },

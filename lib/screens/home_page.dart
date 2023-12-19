@@ -57,30 +57,32 @@ class _HomePageState extends State<HomePage> {
                   if (snapshot.hasData) {
                     QuerySnapshot chatRoomSnapshot =
                         snapshot.data as QuerySnapshot;
-      
+
                     return ListView.builder(
                       itemCount: chatRoomSnapshot.docs.length,
                       itemBuilder: (context, index) {
                         ChatRoomModel chatRoomModel = ChatRoomModel.fromMap(
                             chatRoomSnapshot.docs[index].data()
                                 as Map<String, dynamic>);
-      
+
                         Map<String, dynamic> participant =
                             chatRoomModel.participant!;
-      
-                        List<String> participantKeys = participant.keys.toList();
-      
+
+                        List<String> participantKeys =
+                            participant.keys.toList();
+
                         participantKeys.remove(widget.userModel.uid);
-      
+
                         return FutureBuilder(
-                          future:
-                              FirebaseHelperModel.getUserById(participantKeys[0]),
+                          future: FirebaseHelperModel.getUserById(
+                              participantKeys[0]),
                           builder: (context, userData) {
                             if (userData.connectionState ==
                                 ConnectionState.done) {
                               if (userData.data != null) {
-                                UserModel targetUser = userData.data as UserModel;
-      
+                                UserModel targetUser =
+                                    userData.data as UserModel;
+
                                 return ListTile(
                                   onTap: () {
                                     Navigator.push(context, CupertinoPageRoute(
@@ -107,9 +109,15 @@ class _HomePageState extends State<HomePage> {
                                         )
                                       : Text(
                                           chatRoomModel.lastMessage.toString(),
-                                          style:
-                                              const TextStyle(color: gray939393),
+                                          style: const TextStyle(
+                                              color: gray939393),
                                         ),
+                                  trailing: Text(
+                                    chatRoomModel.createdOn
+                                        .toString()
+                                        .substring(5, 10),
+                                    style: const TextStyle(color: gray8F959E),
+                                  ),
                                 );
                               } else {
                                 return Container();
